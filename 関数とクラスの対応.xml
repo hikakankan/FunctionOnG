@@ -1,0 +1,3410 @@
+<page>
+  <title>関数とクラスの対応</title>
+  <text>関数とクラスの対応</text>
+  <subpages>
+    <page>
+      <title>目的</title>
+      <text>目的</text>
+      <subpages>
+        <page>
+          <title>クラスの関数的な側面</title>
+          <text>クラスの関数的な側面</text>
+          <subpages>
+            <page>
+              <title>思考実験？ クラスが1つだけあるプログラム</title>
+              <text>思考実験？ クラスが1つだけあるプログラム
+
+C#で、例1のようなクラスが1つだけあるようなプログラムを考えます。
+するとこのプログラムは、このクラスの中のメソッドを無限に反復するようなプログラムの1回分の処理を表すと考えることもできます。
+
+C# のクラスの例1
+
+    class ClassX
+    {
+        public ClassY MethodX()
+        {
+            ……
+        }
+
+        ……
+
+    }</text>
+              <subpages>
+                <page>
+                  <title>無限の処理を関数で表す</title>
+                  <text>無限の処理を関数で表す
+
+このような無限に反復する処理を関数で表すことを考えます。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>変更されないクラスの作成</title>
+                  <text>変更されないクラスの作成
+
+そのためにメソッドによってこのオブジェクトが変更されないように、メンバーを変更するメソッドを新しいクラスを作って返すメソッドに書き換えます。
+例1のクラスを例2のように書き換えます。
+
+C# のクラスの例2
+
+    class ClassX
+    {
+        private ClassY y;
+
+        public ClassX MethodX()
+        {
+            // y を変更した ClassX のインスタンスを作成して返す
+            ……
+            return new ClassX(y);
+        }
+
+        public ClassY GetY()
+        {
+            return y;
+        }
+
+        ……
+
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>反復を表す関数</title>
+                  <text>反復を表す関数
+
+このクラスを使って、以下のように反復のプログラムを書くことができます。
+
+iterate((ClassX x) =&gt; x.MethodX(), x0).Select(x =&gt; x.GetY())
+
+x0 は ClassX 型の初期値です。
+たとえば
+
+ClassX x0 = new ClassX();
+
+オブジェクト自体は変更されないものとしたため、
+たとえばこの関数がテキストボックスを更新するものだとすると、
+毎回の GetY() の結果がテキストボックスの内容になると考えることもできますし、
+GetY() はテキストボックスを更新する「副作用」を表すと考えることもできます。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>ここで iterate は Haskell の iterate と同様の関数を作</title>
+                  <text>ここで iterate は Haskell の iterate と同様の関数を作ったものです。
+
+        public static IEnumerable&lt;T&gt; iterate&lt;T&gt;(Func&lt;T, T&gt; func, T init)
+        {
+            for ( ;;)
+            {
+                yield return init;
+                init = func(init);
+            }
+        }</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>C#とF#のイテレーター的機能</title>
+              <text>C#とF#のイテレーター的機能</text>
+              <subpages>
+                <page>
+                  <title>C#とF#のイテレーター的構文</title>
+                  <text>C#とF#のイテレーター的構文
+
+C#とF#にはイテレーター的な構文があります。
+C# では foreach 文や yield return 文を使うと、無限リストの1回の処理ごとに呼び出し元に処理を戻すようなことができます。
+F# では seq と yield または yield! を使って同様の定義ができます。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>C# では yield return 文などを使うことにより、IEnumerat</title>
+                  <text>C# では yield return 文などを使うことにより、IEnumerator&lt;T&gt; 型のオブジェクトを作ることができます。
+このオブジェクトに対する GetEnumerator() メソッドによって IEnumerator&lt;T&gt; 型のオブジェクトを作ることができます。
+反復を表す関数は以下のように書くことができます。
+IEnumerator&lt;T&gt; 型のオブジェクトを返す関数を f() とすると
+
+IEnumerator&lt;T&gt; x0 = f().GetEnumerator();
+
+iterate((IEnumerator&lt;T&gt; x) =&gt; { x.MoveNext(); return x; }, x0).Select(x =&gt; x.Current)</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>F# でも Seq 型によって同様のことができます。</title>
+                  <text>F# でも Seq 型によって同様のことができます。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>イテレーター的な機能と関数の関係</title>
+                  <text>イテレーター的な機能と関数の関係
+
+イテレーター的な機能は関数による定義を反復の1回分に変換するものと考えられます。</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>イテレーター的機能でのイベント処理</title>
+              <text>イテレーター的機能でのイベント処理</text>
+              <subpages>
+                <page>
+                  <title>イテレーター的機能を使って、GUIからの入力などのイベントの処理を行うことを考え</title>
+                  <text>イテレーター的機能を使って、GUIからの入力などのイベントの処理を行うことを考えます。
+以下のようなクラスを作ります。
+Set メソッドでセットした値を GetEnumerator メソッドの中で yield return で返しています。
+GetEnumerator メソッドの中で yield return を使うと IEnumerable&lt;T&gt; 型のオブジェクトから GetEnumerator メソッドで返したものと同じものになります。
+Set メソッドでセットした値を GetEnumerator メソッドの中で使えるのかどうかは、現状は使えるし本来使えるべきだと思いますが、仕様がどうなっているのかは調査していません。
+
+    class Inputs&lt;T&gt; : IEnumerable&lt;T&gt;
+    {
+        private T contents;
+
+        public void Set(T s)
+        {
+            contents = s;
+        }
+
+        public IEnumerator&lt;T&gt; GetEnumerator()
+        {
+            for ( ;;)
+            {
+                yield return contents;
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>この機能によって、C# や F# ではGUIからの入力などのイベントの処理を関数</title>
+                  <text>この機能によって、C# や F# ではGUIからの入力などのイベントの処理を関数の形で表すことができます。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>以下のようなクラスを作って関数で表すことを考えます。</title>
+                  <text>以下のようなクラスを作って関数で表すことを考えます。
+
+inputs.scanl((ClassZ z, ClassX x) =&gt; x.MethodX(z), x0).Select(x =&gt; x.GetY())
+
+C# のクラスの例3
+
+    class ClassX
+    {
+        private ClassY y;
+
+        public ClassX MethodX(ClassZ z)
+        {
+            // y を変更した ClassX のインスタンスを作成して返す
+            ……
+            return new ClassX(y);
+        }
+
+        public ClassY GetY()
+        {
+            return y;
+        }
+
+        ……
+
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>ここで scanl は Haskell の scanl と同様の関数を作ったもの</title>
+                  <text>ここで scanl は Haskell の scanl と同様の関数を作ったものです。
+
+        public static IEnumerable&lt;Out&gt; scanl&lt;In, Out&gt;(this IEnumerable&lt;In&gt; objs, Func&lt;In, Out, Out&gt; f, Out init)
+        {
+            Out acc = init;
+            yield return acc;
+            foreach ( In obj in objs )
+            {
+                acc = f(obj, acc);
+                yield return acc;
+            }
+        }
+
+        public static IEnumerable&lt;Out&gt; scanl&lt;In, Out&gt;(this IEnumerable&lt;In&gt; objs, Func&lt;In, Out, Out&gt; f, Out init)
+        {
+            Out acc = init;
+            return new Out[] { acc }.Concat(objs.Select(obj =&gt; acc = f(obj, acc)));
+        }
+</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>inputs を入力列を表す IEnumerator&lt;U&gt; 型のオブジェクト、</title>
+                  <text>inputs を入力列を表す IEnumerator&lt;U&gt; 型のオブジェクト、
+f(inputs) を入力列を引数として処理を行う関数とします。
+
+IEnumerator&lt;T&gt; x0 = f(inputs).GetEnumerator();
+
+iterate((IEnumerator&lt;T&gt; x) =&gt; { x.MoveNext(); return x; }, x0).Select(x =&gt; x.Current)</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>f(inputs) = inputs.scanl((U u, IEnumerat</title>
+                  <text>f(inputs) = inputs.scanl((U u, IEnumerator&lt;T&gt; x) =&gt; { x.Set(u); x.MoveNext(); return x; }, x0).Select(x =&gt; x.Current)
+
+U は入力から得られる型とします。
+
+IEnumerator&lt;T&gt; x0 = f(inuts).GetEnumerator();
+
+このようになれば良いのですが、IEnumerator&lt;T&gt; 型のオブジェクトに対して Set(u) ができないので、これはできません。
+
+しかしこの関数で得られるオブジェクトに対して inputs に Set(u) ができるようにすると、このような形に書くことができます。
+これは後の例で述べます。</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>純粋関数型言語</title>
+              <text>純粋関数型言語</text>
+              <subpages>
+                <page>
+                  <title>例について</title>
+                  <text>例について
+Haskellでよく使われる例
+フィボナッチ数列とエラトステネスのふるいについて述べる。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>C#とF#の機能</title>
+                  <text>C#とF#の機能
+Haskell での定義(定義2による定義)と同じように C# で定義すると以下のようになりますが、この関数を呼び出すと戻ってきません。
+関数 fib() を呼び出すとまずその定義の中で使われている fib() が呼び出され、それが終了した後で呼び出し元の関数が実行されるという順序になっているためです。
+C# の実行順序はこのようになっています(正格評価)。
+
+F# でも Haskell と同様に定義すると動きません。
+
+純粋関数型言語では数学的な定義と同様の定義ができますが、C#やF#ではできません。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>このように純粋関数型言語では参照透過性(式を評価する際、同じ式を再び評価しても同</title>
+                  <text>このように純粋関数型言語では参照透過性(式を評価する際、同じ式を再び評価しても同じ結果となる)があるため数学的な定義と同様の定義ができます。
+また、評価の順序は決まっていないのですが、この場合のように無限リストの先頭から順に決まっていけば良い場合には、先頭から順に値を得ることができます。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>ジェネレーターからの変換の計算理論的分類</title>
+                  <text>ジェネレーターからの変換の計算理論的分類
+Haskellでは実行順序はないが実際の処理系には実行順序があり、処理系依存
+結果が無限リストの場合は先頭から順に決定する方法があるときに先頭から有限個の結果を見ることができる
+これには計算理論的な分類があると思われるがここでは分類しない</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>ここでは「列挙可能クラス」と呼ぶことにします。</title>
+                  <text>ここでは「列挙可能クラス」と呼ぶことにします。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>Haskellでは実行順序はありませんが、</title>
+                  <text>Haskellでは実行順序はありませんが、
+無限のリストと対応していると考えた方が良いこともあります。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>関数抽象と関数適用だけでは分岐や構造を表すことができないため、</title>
+                  <text>関数抽象と関数適用だけでは分岐や構造を表すことができないため、
+直積と直和を付け加えて、
+関数と疑似クラスによって分岐や構造を表すようにします。
+すると1つのパスを考えるとリストとなり、
+全体の構造はリストの直積と直和で表すことができます。
+したがってリストの take と同様の関数で結果を取り出すことができます。
+</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>今後の展望</title>
+              <text>今後の展望</text>
+              <subpages>
+                <page>
+                  <title>TyprScriptの便利な機能の導入</title>
+                  <text>TyprScriptの便利な機能の導入
+Fractal/TS</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>F#でのGUI</title>
+                  <text>F#でのGUI
+Fractal/F#</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>ジェネレーター</title>
+                  <text>ジェネレーター
+時間の流れを表す
+GUI
+サーバーの処理
+関数との対応</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>機械学習</title>
+                  <text>機械学習
+「ジェネレーター」との対応</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>入力に対応</title>
+                  <text>入力に対応</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>今後の展望</title>
+                  <text>今後の展望
+生成元マトリックスによってインデックスがつけられた半環
+
+フラクタル代数言語
+Fractal/F#
+F#のクラスに対応
+代数的分類
+
+ジェネレーター
+時間の流れを表す
+GUI
+サーバーの処理
+関数との対応
+
+ジェネレーターからの変換の計算理論的分類
+Haskellでは実行順序はないが実際の処理系には実行順序があり、処理系依存
+結果が無限リストの場合は先頭から順に決定する方法があるときに先頭から有限個の結果を見ることができる
+これには計算理論的な分類があると思われるがここでは分類しない
+
+IEnumeratorの入力を受け付ける版
+
+F#でのGUI
+
+TyprScriptの便利な機能の導入
+Fractal/TS</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+          </subpages>
+        </page>
+        <page>
+          <title>例：フィボナッチ数列</title>
+          <text>例：フィボナッチ数列</text>
+          <subpages>
+            <page>
+              <title>フィボナッチ数列の定義</title>
+              <text>フィボナッチ数列の定義</text>
+              <subpages>
+                <page>
+                  <title>定義1</title>
+                  <text>定義1
+f_{1} = 0,
+f_{2} = 1,
+f_{n+2} = f_{n+1} + f_{n} (n≧1)
+で定義される数列 f_{n} をフィボナッチ数列と呼びます。
+f_{n} で数列の n 項めを表します。
+この f_{1}, f_{2}, … という数列を f で表すことにします。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>定義2</title>
+                  <text>定義2
+数列 a と b に対して a + b を (a + b)_{n} = a_{n} + b_{n} を満たす数列とします。
+ここで (a + b)_{n} は数列 a + b の n 項めを表すとします。
+a1, a2, … , an という有限の数列を [a1, a2, … , an]と書くことにします。
+有限の数列(長さ n) a と有限または無限の数列 b に対して a ++ b を a の後に b を連結した
+a_{1}, a_{2}, … , a_{n}, b_{1}, b_{2}, …
+という数列とします。
+数列 a に対して tail(a) を n 項めが a_{n+1} であるような数列
+a_{2}, a_{3}, … とします。
+
+f = [0, 1] ++ (f + tail(f))
+という等式を考えると、上に定義したフィボナッチ数列はこの等式を満たしています。
+また逆に f がこの等式を満たすならば
+f_{1} = 0,
+f_{2} = 1,
+f_{n+2} = f_{n+1} + f_{n} (n≧1)
+が成り立ち、f はフィボナッチ数列になります。</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>定義3</title>
+                  <text>定義3
+数列 a の m 項めから n 項めまでの列を a_{m…n} と書くことにします。
+
+定義2の f に対して f_{1…n}  (n≧1) を考えると f_{1…n+2} は f_{1…n+1} から決まります(n≧1)。
+f_{1…1} = [0],
+f_{1…2} = [0, 1],
+f_{1…n+2} = f_{1…n+1} ++ [f_{n} + f_{n+1}] (n≧1)
+
+f_{1…n} を F_{n} と書くと
+F_{1} = [0],
+F_{2} = [0, 1],
+F_{n+2} = F_{n+1} ++ [last2(F_{n+1}) + last(F_{n+1})] (n≧1)
+a が有限の列のとき last(a) で最後の項、last2(a) で最後から2番目の項を表します。
+
+最後の2項目だけで決まるということから
+f_{1…2} = [0, 1],
+f_{n+1…n+2} = [f_{n+1}, f_{n} + f_{n+1}] (n≧1)
+
+f_{n…n+1} を F2_{n+1} と書くと
+F2_{2} = [0, 1],
+F2_{n+2} = last(F2_{n+1}) ++ sum(F2_{n+1}) (n≧1)
+と定義することもできます。
+ここで a が有限の列のとき sum(a) は a のすべての項の和を表します。
+これは定義1から導くことができます。
+
+この議論からわかるように、数列 a が a_{1…n} から a_{1…n+1} (十分大きな任意の n に対して)が定まるものである場合この議論が成り立ちます。</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>Haskellでの定義</title>
+              <text>Haskellでの定義</text>
+              <subpages>
+                <page>
+                  <title>定義2による定義</title>
+                  <text>定義2による定義
+Haskellでは、定義2と同様に定義することができます。
+fib = 0:1:zipWith (+) fib (tail fib)
+「:」はリストのコンストラクタ(データ構築子)で無限リストとして表されています。
+
+このように純粋関数型言語では参照透過性(式を評価する際、同じ式を再び評価しても同じ結果となる)があるため数学的な定義と同様の定義ができます。
+また、評価の順序は決まっていないのですが、この場合のように無限リストの先頭から順に決まっていけば良い場合には、先頭から順に値を得ることができます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+fib = 0:1:zipWith (+) fib (tail fib)
+main = do
+    print $ take 20 fib</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+[0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181]</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>定義3による定義</title>
+                  <text>定義3による定義
+定義3と同様に定義すると以下のコードのようになります。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+fib = map head $ iterate (\xs -&gt; (tail xs) ++ [sum xs]) [0, 1]
+main = do
+    print $ take 20 fib</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+[0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181]</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列がある場合</title>
+                  <text>入力列がある場合</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+fib ns = map head $ scanl (\xs -&gt; \n -&gt; (tail xs) ++ [sum xs]) [0, 1] ns
+main = do
+    print $ fib [1..20]</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+[0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181,6765]</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>C#での定義</title>
+              <text>C#での定義</text>
+              <subpages>
+                <page>
+                  <title>Haskellと同様に定義すると</title>
+                  <text>Haskellと同様に定義すると
+Haskell での定義(定義2による定義)と同じように C# で定義すると以下のようになりますが、この関数を呼び出すと戻ってきません。
+関数 fib() を呼び出すとまずその定義の中で使われている fib() が呼び出され、それが終了した後で呼び出し元の関数が実行されるという順序になっているためです。
+C# の実行順序はこのようになっています(正格評価)。
+
+new int[] { 0, 1 } は項目が 0 と 1 の配列で、リストと同様に使うことができます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private IEnumerable&lt;int&gt; fib()
+        {
+            return new int[] { 0, 1 }.Concat(fib().Zip(fib().Skip(1), (x, y) =&gt; x + y));
+        }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>有限版</title>
+                  <text>有限版
+C# では以下のよう有限のリストにすれば実行することができます。
+
+コードは、関数 fib(int n) によって作られて無限の整数列の先頭から有限個を、
+ボタンをクリックするごとに長く取得して、表示するというものです。
+
+toString() は結果のような文字列を得るために作った拡張メソッドです。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private IEnumerable&lt;int&gt; fib(int n)
+        {
+            if ( n == 0 )
+            {
+                return new int[] { 0, 1 };
+            }
+            else
+            {
+                return new int[] { 0, 1 }.Concat(fib(n - 1).Zip(fib(n - 1).Skip(1), (x, y) =&gt; x + y));
+            }
+        }
+
+        private int count = 0;
+
+        private void buttonFunctionGenerate_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = fib(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>列挙版</title>
+                  <text>列挙版
+C# では以下のように foreach 文を使うと、無限リストの1回の処理ごとに呼び出し元に処理を戻すようなことができます。
+これによって数学的な定義と同様に定義することができます。
+
+コードは、関数 fib() によって作られて無限の整数列の先頭から有限個を、
+ボタンをクリックするごとに長く取得して、表示するというものです。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private IEnumerable&lt;int&gt; fib()
+        {
+            foreach ( int n in new int[] { 0, 1 }.Concat(fib().Zip(fib().Skip(1), (x, y) =&gt; x + y)) )
+            {
+                yield return n;
+            }
+        }
+
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = fib().Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>列挙クラスの作成</title>
+                  <text>列挙クラスの作成
+C# の列挙の処理(IEnumerator&lt;int&gt; 型の処理)はインターフェース IEnumerable&lt;int&gt; を実装したクラスを作ることによって行うこともできます。
+yield return文を使うときの内部的な処理はそのようになっているようです。
+まずインターフェース IEnumerator&lt;int&gt; を実装したクラスを作ります(クラス1)。
+これだけでは列挙の処理には使えないので、ここではインターフェース IEnumerable&lt;int&gt; を実装したクラスを作って使います(クラス2)。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(クラス1)</title>
+                      <text>コード(クラス1)
+    class FibonacciEnumerator : IEnumerator&lt;int&gt;
+    {
+        private int[] fibtail;
+
+        public FibonacciEnumerator(int n1, int n2)
+        {
+            fibtail = new int[] { n1, n2 };
+        }
+
+        public bool MoveNext()
+        {
+            fibtail = new int[] { fibtail[1], fibtail.Sum() };
+            return true;
+        }
+
+        public void Reset() { }
+
+        void IDisposable.Dispose() { }
+
+        public int Current
+        {
+            get { return fibtail[1]; }
+        }
+
+        object System.Collections.IEnumerator.Current
+        {
+            get { return Current; }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(クラス2)</title>
+                      <text>コード(クラス2)
+    class MakeEnumerable&lt;T&gt; : IEnumerable&lt;T&gt;
+    {
+        private IEnumerator&lt;T&gt; enumerator;
+
+        public MakeEnumerable(IEnumerator&lt;T&gt; enumerator)
+        {
+            this.enumerator = enumerator;
+        }
+
+        public IEnumerator&lt;T&gt; GetEnumerator()
+        {
+            return enumerator;
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(使い方)</title>
+                      <text>コード(使い方)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            MakeEnumerable&lt;int&gt; fib = new MakeEnumerable&lt;int&gt;(new FibonacciEnumerator(0, 1));
+            textBoxResult.Text = fib.Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>定義3による定義</title>
+                  <text>定義3による定義
+上で定義したクラス FibonacciEnumerator を使って、定義3と同様の定義をすることができます。
+
+ここで iterate は Haskell の iterate と同様の関数とします。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            FibonacciEnumerator fib = new FibonacciEnumerator(0, 1);
+            textBoxResult.Text = iterate((FibonacciEnumerator f) =&gt; { f.MoveNext(); return f; }, fib).Select(f =&gt; f.Current).Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列がある場合</title>
+                  <text>入力列がある場合
+1回の処理ごとに入力を受け付けるようにすると以下のようになります。
+
+ここで scanl は Haskell の scanl と同様の関数とします。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(クラス)</title>
+                      <text>コード(クラス)
+    class FibonacciEnumerator2 : IEnumerator&lt;int&gt;
+    {
+        private int[] fibtail;
+
+        public FibonacciEnumerator2(int n1, int n2)
+        {
+            fibtail = new int[] { n1, n2 };
+        }
+
+        public bool MoveNext()
+        {
+            fibtail = new int[] { fibtail[1], fibtail.Sum() };
+            return true;
+        }
+
+        public bool MoveNext(int n)
+        {
+            return MoveNext();
+        }
+
+        public void Reset() { }
+
+        void IDisposable.Dispose() { }
+
+        public int Current
+        {
+            get { return fibtail[1]; }
+        }
+
+        object System.Collections.IEnumerator.Current
+        {
+            get { return Current; }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(使い方)</title>
+                      <text>コード(使い方)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            FibonacciEnumerator2 fib = new FibonacciEnumerator2(0, 1);
+            textBoxResult.Text = Enumerable.Range(0, count++).scanl&lt;int, FibonacciEnumerator2&gt;((int n, FibonacciEnumerator2 f) =&gt; { f.MoveNext(n); return f; }, fib).Select(f =&gt; f.Current).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>イベントの処理</title>
+                  <text>イベントの処理
+1回のクリックのイベントによって1回処理を行うとすると以下のようになります。
+GUIからの入力処理を関数的に行うことができます。
+入力の値がある場合は、入力列がある場合と同様の方法でできます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private FibonacciEnumerator fib = new FibonacciEnumerator(0, 1);
+        private List&lt;int&gt; results = new List&lt;int&gt;();
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            results.Add(fib.Current);
+            textBoxResult.Text = results.toString();
+            fib.MoveNext();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>イベントの処理(自動)</title>
+                  <text>イベントの処理(自動)</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        public FormFibonacci()
+        {
+            InitializeComponent();
+            fibe = fib().GetEnumerator();
+        }
+
+        private IEnumerator&lt;int&gt; fibe;
+        private List&lt;int&gt; results = new List&lt;int&gt;();
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            fibe.MoveNext();
+            results.Add(fibe.Current);
+            textBoxResult.Text = results.toString();
+        }
+
+        private IEnumerable&lt;int&gt; fib()
+        {
+            foreach ( int n in new int[] { 0, 1 }.Concat(fib().Zip(fib().Skip(1), (x, y) =&gt; x + y)) )
+            {
+                yield return n;
+            }
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>F#での定義</title>
+              <text>F#での定義</text>
+              <subpages>
+                <page>
+                  <title>Haskellと同様に定義すると</title>
+                  <text>Haskellと同様に定義すると
+F# でも Haskell と同様に定義すると動きません。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+    let rec fib = Seq.append [0;1] (Seq.map2 (+) fib (Seq.skip 1 fib))</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>定義2による定義</title>
+                  <text>定義2による定義
+F# では seq と yield! を使って以下のように定義すると、警告は出ますが動作します。
+C# での foreach と yield return に相当するようです。
+メソッドを呼び出す側はC#で記述しています。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type FibonacciFSharp() = 
+    let rec fib = seq { yield! Seq.append [0;1] (Seq.map2 (+) fib (Seq.skip 1 fib)) }
+    member this.fibSeq = fib</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new FibonacciFSharp().fibSeq.Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>有限版</title>
+                  <text>有限版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type FibonacciFSharp() = 
+    let rec fib n = if n = 0 then Seq.ofList [0;1] else Seq.append [0;1] (Seq.map2 (+) (fib(n-1)) (Seq.skip 1 (fib(n-1))))
+    member this.fibSeq n = fib n</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new FibonacciFSharp().fibSeq(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>定義3による定義</title>
+                  <text>定義3による定義
+F#のクラスによる定義と関数による定義はどちらを使っても良いです。
+関数による定義は Haskell と同様の定義が可能です。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#クラス)</title>
+                      <text>コード(F#クラス)
+type FibTail(ft) =
+    let fibtail : int list = ft
+    member this.current = Seq.head fibtail
+    member this.next = new FibTail([Seq.last fibtail; Seq.sum fibtail])
+
+type FibonacciFSharp() = 
+    let fib = Seq.unfold (fun (fibtail : FibTail) -&gt; Some(fibtail.current, fibtail.next)) (new FibTail([0;1]))
+    member this.fibSeq = fib</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type FibonacciFSharp() = 
+    let fib = Seq.unfold (fun fibtail -&gt; Some(Seq.head fibtail, [Seq.last fibtail; Seq.sum fibtail])) [0;1]
+    member this.fibSeq = fib</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new FibonacciFSharp().fibSeq.Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列がある場合</title>
+                  <text>入力列がある場合
+F#のクラスによる定義と関数による定義はどちらを使っても良いです。
+関数による定義は Haskell と同様の定義が可能です。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#クラス)</title>
+                      <text>コード(F#クラス)
+type FibTail2(ft) =
+    let fibtail : int list = ft
+    member this.current = Seq.head fibtail
+    member this.next n = new FibTail2([Seq.last fibtail; Seq.sum fibtail])
+
+type FibonacciFSharp() = 
+    let fib ns = Seq.map (fun (fibtail : FibTail2) -&gt; fibtail.current) (Seq.scan (fun (fibtail : FibTail2) -&gt; fun n -&gt; fibtail.next n) (new FibTail2([0;1])) ns)
+    member this.fibSeq n = fib [1..n]</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type FibonacciFSharp() = 
+    let fib ns = Seq.map Seq.head (Seq.scan (fun fibtail -&gt; fun n -&gt; [Seq.last fibtail; Seq.sum fibtail]) [0;1] ns) 
+    member this.fibSeq n = fib [1..n]</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new FibonacciFSharp().fibSeq(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>イベントの処理(自動)</title>
+                  <text>イベントの処理(自動)</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type FibonacciFSharp() = 
+    let rec fib = seq { yield! Seq.append [0;1] (Seq.map2 (+) fib (Seq.skip 1 fib)) }
+    member this.fibSeq = fib</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        public FormFibonacci()
+        {
+            InitializeComponent();
+            fibe = new FibonacciFSharp().fibSeq.GetEnumerator();
+        }
+
+        private IEnumerator&lt;int&gt; fibe;
+        private List&lt;int&gt; results = new List&lt;int&gt;();
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            fibe.MoveNext();
+            results.Add(fibe.Current);
+            textBoxResult.Text = results.toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+          </subpages>
+        </page>
+        <page>
+          <title>例：エラトステネスのふるい</title>
+          <text>例：エラトステネスのふるい</text>
+          <subpages>
+            <page>
+              <title>素数の定義</title>
+              <text>素数の定義
+1 と自分自身以外に正の約数を持たない2以上の整数を素数と呼びます。
+素数全体の集合を P とおきます。
+2以上の整数全体の集合をN2 とおきます。
+集合 X と Y に対して X に属するが Y に属さない元全体の集合(差集合) を X - Y と書きます。
+集合 X と Y に対して X の元 x と Y の 元 y の積 xy 全体の集合 { xy | x∈X, y∈Y } を X * Y と書くことにします。
+ある整数 p が素数であるということは p が N2 - (N2 * N2) に属することと同値となります。
+2以上の整数 はある素数で割り切れるので
+N2 * N2 = P * N2 となります。
+よって P = N2 - (P * N2) となります。
+
+ある整数が素数ではないときその整数を割る素数はその整数より小さい素数となります。
+よって P = N2 - (P * N2) によって素数を小さい方から順に求めていくことができます。</text>
+              <subpages />
+            </page>
+            <page>
+              <title>エラトステネスのふるい</title>
+              <text>エラトステネスのふるい
+ある整数 n が素数であることは、n より小さいどの素数でも割りきれないということと同値となります。
+よって P = N2 - (P * N2) という関係から素数を小さいものから帰納的に求めていくことができます。
+P0 を空集合、R0 を N2 とおきます。
+R0 の中で最小のものを p1 とおきます。
+P0 に p1 を付け加えたものを P1、R0 から p1 の倍数を取り除いたものを R1 とおきます。
+次に R1 の中で最小のものを p2 とおきます。
+P1 に p2 を付け加えたものを P2、R1 から p2 の倍数を取り除いたものを R2 とおきます。
+これを繰り返していきます。
+P0, P1, P2, …のすべての和集合が素数全体の集合 P となります。
+
+この方法で、2以上ある整数 n 以下の有限個の整数を最初の素数の候補とすると、
+n 以下のすべての素数を得ることができます。
+
+このアルゴリズム(ふつうは有限の場合)をエラトステネスのふるいと呼びます。
+最初の素数の候補に対して、途中の素数の候補を得るための条件が「ふるい」と考えることができます。
+「ふるい」の条件が次第に強くなっていき、最終的に「ふるい」を通ったものが素数です。
+無限の場合は素数の候補の全体を「ふるい」と考えることができます。</text>
+              <subpages />
+            </page>
+            <page>
+              <title>Haskellでの定義</title>
+              <text>Haskellでの定義</text>
+              <subpages>
+                <page>
+                  <title>素数の定義による定義</title>
+                  <text>素数の定義による定義
+Haskellでは、無限の場合の定義と同様に定義することができます。
+sieve [2..] where
+sieve (p:ns) = p : sieve ([n| n &lt;- ns, n `mod` p /= 0])
+「:」はリストのコンストラクタ(データ構築子)で無限リストとして表されています。
+p が選ばれた素数で sieve ([n| n &lt;- ns, n `mod` p /= 0]) が残っている素数の候補です。
+
+このように純粋関数型言語では参照透過性(式を評価する際、同じ式を再び評価しても同じ結果となる)があるため数学的な定義と同様の定義ができます。
+また、評価の順序は決まっていないのですが、この場合のように無限リストの先頭から順に決まっていけば良い場合には、先頭から順に値を得ることができます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+sieve (p:ns) = p : sieve ([n| n &lt;- ns, n `mod` p /= 0])
+main = do
+    print $ take 30 $ sieve [2..]</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113]</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>ふるいの変換による定義</title>
+                  <text>ふるいの変換による定義
+ふるいの変化に注目すると、ふるいの変換の繰り返しとして記述することができます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+nextsieve (po, sieve) =
+    let p = head (sieve [2..]) in
+        (p, \ns -&gt; filter (\n -&gt; n `mod` p /= 0) (sieve ns))
+primes = map fst $ iterate nextsieve (nextsieve ([], \ns -&gt; ns))
+main = do
+    print $ take 30 primes</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113]</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列がある場合</title>
+                  <text>入力列がある場合
+数値が引数となっている場合は以下のように書けます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+nextsieve2 (po, sieve) number =
+    let ps = sieve [number] in
+        case ps of
+            []  -&gt; (ps, sieve)
+            p:_ -&gt; (ps, \ns -&gt; filter (\n -&gt; n `mod` p /= 0) (sieve ns))
+primes2 ns = concat $ map fst (scanl nextsieve2 ([], \ns -&gt; ns) ns) 
+main = do
+    print $ primes2 [2..31]</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+[2,3,5,7,11,13,17,19,23,29,31]</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>C#での定義</title>
+              <text>C#での定義</text>
+              <subpages>
+                <page>
+                  <title>Haskellと同様に定義すると</title>
+                  <text>Haskellと同様に定義すると
+Haskell での定義と同じように C# で定義すると以下のようになりますが、この関数を呼び出すと戻ってきません。
+関数 sieve() を呼び出すとまずその定義の中で使われている sieve() が呼び出され、それが終了した後で呼び出し元の関数が実行されるという順序になっているためです。
+C# の実行順序はこのようになっています(正格評価)。
+
+new int[] { p } は項目が p だけの配列で、リストと同様に使うことができます。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private IEnumerable&lt;int&gt; sieve(IEnumerable&lt;int&gt; ns)
+        {
+            int p = ns.FirstOrDefault();
+            return new int[] { p }.Concat(sieve(ns.Skip(1).Where(n =&gt; n % p != 0)));
+        }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>有限版</title>
+                  <text>有限版</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private IEnumerable&lt;int&gt; sievef(IEnumerable&lt;int&gt; ns)
+        {
+            int p = ns.FirstOrDefault();
+            if ( p == 0 )
+            {
+                return new int[] { };
+            }
+            else
+            {
+                return new int[] { p }.Concat(sievef(ns.Skip(1).Where(n =&gt; n % p != 0)));
+            }
+        }
+
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = sievef(Enumerable.Range(2, count++)).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>列挙版</title>
+                  <text>列挙版</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private IEnumerable&lt;int&gt; sieve(IEnumerable&lt;int&gt; ns)
+        {
+            int p = ns.FirstOrDefault();
+            foreach ( int k in new int[] { p }.Concat(sieve(ns.Skip(1).Where(n =&gt; n % p != 0))) )
+            {
+                yield return k;
+            }
+        }
+
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = sieve(iterate(n =&gt; n + 1, 2)).Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード2</title>
+                      <text>コード2
+        private IEnumerable&lt;int&gt; sieve(IEnumerable&lt;int&gt; ns)
+        {
+            int p = ns.FirstOrDefault();
+            yield return p;
+            foreach ( int k in sieve(ns.Skip(1).Where(n =&gt; n % p != 0)) )
+            {
+                yield return k;
+            }
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>列挙クラスの作成</title>
+                  <text>列挙クラスの作成</text>
+                  <subpages>
+                    <page>
+                      <title>コード(クラス1)</title>
+                      <text>コード(クラス1)
+    class PrimesEnumerator : IEnumerator&lt;int&gt;
+    {
+        private int lastPrime;
+        private Func&lt;IEnumerable&lt;int&gt;, IEnumerable&lt;int&gt;&gt; sieve = numbers =&gt; numbers;
+
+        public bool MoveNext()
+        {
+            int p = sieve(iterate(n =&gt; n + 1, 2)).FirstOrDefault();
+            lastPrime = p;
+            if ( p != 0 )
+            {
+                Func&lt;IEnumerable&lt;int&gt;, IEnumerable&lt;int&gt;&gt; s = sieve;
+                sieve = (IEnumerable&lt;int&gt; numbers) =&gt; s(numbers).Where(n =&gt; n % p != 0);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public void Reset() { }
+
+        void IDisposable.Dispose() { }
+
+        public int Current
+        {
+            get { return lastPrime; }
+        }
+
+        object System.Collections.IEnumerator.Current
+        {
+            get { return Current; }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(クラス2)</title>
+                      <text>コード(クラス2)
+    class MakeEnumerable&lt;T&gt; : IEnumerable&lt;T&gt;
+    {
+        private IEnumerator&lt;T&gt; enumerator;
+
+        public MakeEnumerable(IEnumerator&lt;T&gt; enumerator)
+        {
+            this.enumerator = enumerator;
+        }
+
+        public IEnumerator&lt;T&gt; GetEnumerator()
+        {
+            return enumerator;
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(使い方)</title>
+                      <text>コード(使い方)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new MakeEnumerable&lt;int&gt;(new PrimesEnumerator()).Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>ふるいの変換による定義</title>
+                  <text>ふるいの変換による定義</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            PrimesEnumerator primesEnum = new PrimesEnumerator();
+            primesEnum.MoveNext();
+            textBoxResult.Text = iterate((PrimesEnumerator em) =&gt; { em.MoveNext(); return em; }, primesEnum).Select(em =&gt; em.Current).Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列がある場合</title>
+                  <text>入力列がある場合</text>
+                  <subpages>
+                    <page>
+                      <title>コード(クラス)</title>
+                      <text>コード(クラス)
+    class PrimesEnumerator2
+    {
+        private int[] lastPrimeOpt;
+        private Func&lt;IEnumerable&lt;int&gt;, IEnumerable&lt;int&gt;&gt; sieve;
+
+        public PrimesEnumerator2()
+        {
+            this.lastPrimeOpt = new int[] { };
+            this.sieve = numbers =&gt; numbers;
+        }
+
+        private PrimesEnumerator2(int[] lastPrimeOpt, Func&lt;IEnumerable&lt;int&gt;, IEnumerable&lt;int&gt;&gt; sieve)
+        {
+            this.lastPrimeOpt = lastPrimeOpt;
+            this.sieve = sieve;
+        }
+
+        public PrimesEnumerator2 MoveNext(int number)
+        {
+            int p = sieve(new int[] { number }).FirstOrDefault();
+            if ( p != 0 )
+            {
+                lastPrimeOpt = new int[] { p };
+                Func&lt;IEnumerable&lt;int&gt;, IEnumerable&lt;int&gt;&gt; s = sieve;
+                Func&lt;IEnumerable&lt;int&gt;, IEnumerable&lt;int&gt;&gt; newsieve = (IEnumerable&lt;int&gt; numbers) =&gt; s(numbers).Where(n =&gt; n % p != 0);
+                return new PrimesEnumerator2(new int[] { p }, newsieve);
+            }
+            else
+            {
+                return new PrimesEnumerator2(new int[] { }, sieve);
+            }
+        }
+
+        public int[] Current
+        {
+            get { return lastPrimeOpt; }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(使い方)</title>
+                      <text>コード(使い方)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            PrimesEnumerator2 primesEnum = new PrimesEnumerator2();
+            textBoxResult.Text = Enumerable.Range(2, count++).scanl&lt;int, PrimesEnumerator2&gt;((int n, PrimesEnumerator2 em) =&gt; em.MoveNext(n), primesEnum).SelectMany(em =&gt; em.Current).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>イベントの処理</title>
+                  <text>イベントの処理</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        private PrimesEnumerator primesEnum = new PrimesEnumerator();
+        private List&lt;int&gt; results = new List&lt;int&gt;();
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            primesEnum.MoveNext();
+            results.Add(primesEnum.Current);
+            textBoxResult.Text = results.toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>イベントの処理(自動)</title>
+                  <text>イベントの処理(自動)</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+        public FormEratosthenes()
+        {
+            InitializeComponent();
+            primesEnum = sieve(iterate(n =&gt; n + 1, 2)).GetEnumerator();
+        }
+
+        private IEnumerator&lt;int&gt; primesEnum;
+        private List&lt;int&gt; results = new List&lt;int&gt;();
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            primesEnum.MoveNext();
+            results.Add(primesEnum.Current);
+            textBoxResult.Text = results.toString();
+        }
+
+        private IEnumerable&lt;int&gt; sieve(IEnumerable&lt;int&gt; ns)
+        {
+            int p = ns.FirstOrDefault();
+            yield return p;
+            foreach ( int k in sieve(ns.Skip(1).Where(n =&gt; n % p != 0)) )
+            {
+                yield return k;
+            }
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>F#での定義</title>
+              <text>F#での定義</text>
+              <subpages>
+                <page>
+                  <title>Haskellと同様に定義すると</title>
+                  <text>Haskellと同様に定義すると
+F# でも Haskell と同様に定義すると動きません。</text>
+                  <subpages>
+                    <page>
+                      <title>コード</title>
+                      <text>コード
+    let rec sieve ns = let p = Seq.head ns in p :: sieve (Seq.filter (fun n -&gt; n % p &lt;&gt; 0) ns)</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>有限版</title>
+                  <text>有限版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type EratosthenesFS() = 
+    let rec sieve = function
+        | (p::ns) -&gt; p :: sieve [for n in ns do if n % p &lt;&gt; 0 then yield n]
+        | [] -&gt; []
+    member this.primes n = sieve [2..n]</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 2;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new EratosthenesFS().primes(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>列挙版</title>
+                  <text>列挙版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type EratosthenesFS() = 
+    let rec sieve ns = seq { let p = Seq.head ns in yield! Seq.append [p] (sieve (Seq.filter (fun n -&gt; n % p &lt;&gt; 0) ns)) }
+    member this.primes = sieve (Seq.initInfinite (fun n -&gt; n+2))</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード2(F#)</title>
+                      <text>コード2(F#)
+    let rec sieve ns = seq { let p = Seq.head ns in yield p; yield! sieve (Seq.filter (fun n -&gt; n % p &lt;&gt; 0) ns) }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new EratosthenesFS().primes.Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>ふるいの変換による定義</title>
+                  <text>ふるいの変換による定義
+F#のクラスによる定義と関数による定義はどちらを使っても良いです。
+関数による定義は Haskell と同様の定義が可能です。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#クラス)</title>
+                      <text>コード(F#クラス)
+type PrimesEnumerator(prime, sieve) =
+    member this.prime = prime
+    member this.sieve = sieve
+    member this.next =
+        let p = Seq.head (sieve (Seq.initInfinite (fun n -&gt; n + 2)))
+        new PrimesEnumerator(p, fun ns -&gt; Seq.filter (fun n -&gt; n % p &lt;&gt; 0) (sieve ns))
+    new() = PrimesEnumerator(2, fun ns -&gt; ns)
+
+type EratosthenesFS() = 
+    member this.primes = Seq.unfold (fun (pe : PrimesEnumerator) -&gt; Some(pe.prime, pe.next)) (new PrimesEnumerator()).next</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type EratosthenesFS() = 
+    let nextsieve (po, sieve) =
+        let p = Seq.head (sieve (Seq.initInfinite (fun n -&gt; n + 2)))
+        (p, fun ns -&gt; Seq.filter (fun n -&gt; n % p &lt;&gt; 0) (sieve ns))
+
+    member this.primes = Seq.unfold (fun pe -&gt; Some(fst pe, nextsieve pe)) (nextsieve (Seq.empty, fun ns -&gt; ns))</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new EratosthenesFS().primes.Take(count++).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列がある場合</title>
+                  <text>入力列がある場合
+F#のクラスによる定義と関数による定義はどちらを使っても良いです。
+関数による定義は Haskell と同様の定義が可能です。</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#クラス)</title>
+                      <text>コード(F#クラス)
+type PrimesEnumerator2(prime, sieve) =
+    member this.prime = prime
+    member this.sieve = sieve
+    member this.next number =
+        let p = sieve (Seq.singleton number)
+        if Seq.isEmpty p
+            then new PrimesEnumerator2(p, sieve)
+            else new PrimesEnumerator2(p, fun ns -&gt; Seq.filter (fun n -&gt; n % (Seq.head p) &lt;&gt; 0) (sieve ns))
+    new() = PrimesEnumerator2(Seq.empty, fun ns -&gt; ns)
+
+type EratosthenesFS() = 
+    member this.primes2 ns = Seq.collect (fun (pe : PrimesEnumerator2) -&gt; pe.prime) (Seq.scan (fun (pe : PrimesEnumerator2) -&gt; fun n -&gt; pe.next n) (new PrimesEnumerator2()) ns) </text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type EratosthenesFS() = 
+    let nextsieve2 (po, sieve) number =
+        let p = sieve (Seq.singleton number)
+        if Seq.isEmpty p
+            then (p, sieve)
+            else (p, fun ns -&gt; Seq.filter (fun n -&gt; n % (Seq.head p) &lt;&gt; 0) (sieve ns))
+
+    member this.primes2 ns = Seq.collect fst (Seq.scan nextsieve2 (Seq.empty, fun ns -&gt; ns) ns) </text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        private int count = 1;
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            textBoxResult.Text = new EratosthenesFS().primes2(Enumerable.Range(2, count++)).toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>イベントの処理(自動)</title>
+                  <text>イベントの処理(自動)</text>
+                  <subpages>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+type EratosthenesFS() = 
+    let rec sieve ns = seq { let p = Seq.head ns in yield p; yield! sieve (Seq.filter (fun n -&gt; n % p &lt;&gt; 0) ns) }
+
+    member this.primes = sieve (Seq.initInfinite (fun n -&gt; n+2))</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(C#)</title>
+                      <text>コード(C#)
+        public FormEratosthenes()
+        {
+            InitializeComponent();
+            primesEnum = new EratosthenesFS().primes.GetEnumerator();
+        }
+
+        private IEnumerator&lt;int&gt; primesEnum;
+        private List&lt;int&gt; results = new List&lt;int&gt;();
+
+        private void button_Click(object sender, EventArgs e)
+        {
+            primesEnum.MoveNext();
+            results.Add(primesEnum.Current);
+            textBoxResult.Text = results.toString();
+        }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>結果</title>
+                      <text>結果
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+          </subpages>
+        </page>
+        <page>
+          <title>例：フラクタル(コッホ曲線)</title>
+          <text>例：フラクタル(コッホ曲線)</text>
+          <subpages>
+            <page>
+              <title>Haskell</title>
+              <text>Haskell</text>
+              <subpages>
+                <page>
+                  <title>data Point = Point Double Double derivin</title>
+                  <text>data Point = Point Double Double deriving Show
+data Line = Line Point Point deriving Show
+data Tree = Tree Line [Tree]
+data Division = Division [Point] deriving Show
+
+(Point x1 y1) &lt;+&gt; (Point x2 y2) = Point (x1 + x2) (y1 + y2)
+(Point x1 y1) &lt;-&gt; (Point x2 y2) = Point (x1 - x2) (y1 - y2)
+(Point px py) &lt;*&gt; (Point tx ty) = Point (tx * px - ty * py) (ty * px + tx * py)
+
+(Line start end) &lt;++&gt; p = Line (start &lt;+&gt; p) (end &lt;+&gt; p)
+(Line start end) &lt;**&gt; (Line ts te) = let d = end &lt;-&gt; start in Line (start &lt;+&gt; (d &lt;*&gt; ts)) (start &lt;+&gt; (d &lt;*&gt; te))
+
+divLines start end (Division []) = [Line start end]
+divLines start end (Division (p:ps)) = (Line start p):(divLines p end (Division ps))
+divisionLines (Division ps) = divLines (Point 0 0) (Point 1 0) (Division ps)</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>division = Division [Point (1.0 / 3.0)  </title>
+                  <text>division = Division [Point (1.0 / 3.0)  0, Point (1.0 / 2.0) (-sin (pi / 3.0) / 3.0), Point (2.0 / 3.0) 0]
+
+drawAllLines line = [line] : (map (\index -&gt; concatMap (\t -&gt; (drawAllLines (line &lt;**&gt; t)) !! index) (divisionLines division)) [0..])
+draw1 line level = drawAllLines line !! level
+
+line = Line (Point 0 0) (Point 1 0)
+
+main = do
+    print $ draw1 line 3</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>division = Division [Point (1.0 / 3.0)  </title>
+                  <text>division = Division [Point (1.0 / 3.0)  0, Point (1.0 / 2.0) (-sin (pi / 3.0) / 3.0), Point (2.0 / 3.0) 0]
+
+drawTree line = Tree line (map (\t -&gt; drawTree (line &lt;**&gt; t)) (divisionLines division))
+allLines (Tree line children) = [line] : (map (\index -&gt; concatMap (\tree -&gt; (allLines tree) !! index) children) [0..])
+draw2 line level = allLines (drawTree line) !! level
+
+line = Line (Point 0 0) (Point 1 0)
+
+main = do
+    print $ draw2 line 3</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>division = Division [Point (1.0 / 3.0)  </title>
+                  <text>division = Division [Point (1.0 / 3.0)  0, Point (1.0 / 2.0) (-sin (pi / 3.0) / 3.0), Point (2.0 / 3.0) 0]
+
+nextLines lines = concatMap (\line -&gt; map (\t -&gt; line &lt;**&gt; t)  (divisionLines division)) lines
+flatIterate line = iterate nextLines [line]
+draw3 line level = flatIterate line !! level
+
+line = Line (Point 0 0) (Point 1 0)
+
+main = do
+    print $ draw3 line 3</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>C#</title>
+              <text>C#</text>
+              <subpages>
+                <page>
+                  <title>public partial class FormFractal : Form</title>
+                  <text>public partial class FormFractal : Form
+    {
+        public FormFractal()
+        {
+            InitializeComponent();
+            fractal = new Fractal();
+            fractal.addPoint(new Point(1.0 / 3.0, 0));
+            fractal.addPoint(new Point(1.0 / 2.0, -Math.Sin(Math.PI / 3.0) / 3.0));
+            fractal.addPoint(new Point(2.0 / 3.0, 0));
+
+            fractal_fs = new FractalFSharp.Fractal();
+        }
+
+        private Fractal fractal;
+        private FractalFSharp.Fractal fractal_fs;
+
+        private int count = 0;
+
+        private void next(Action&lt;Line, int&gt; draw)
+        {
+            Line line = new Line(new Point(0, 0), new Point(1, 0));
+            draw(line, count++);
+            pictureBoxFractal.Invalidate();
+        }
+
+        private void next(Action&lt;int&gt; draw)
+        {
+            draw(count++);
+            pictureBoxFractal.Invalidate();
+        }
+
+        private void buttonNext_Click(object sender, EventArgs e)
+        {
+            next(fractal.draw0);
+        }
+
+        private void buttonNext1_Click(object sender, EventArgs e)
+        {
+            //next(fractal.draw1);
+            next(fractal_fs.draw1);
+        }
+
+        private void buttonNext2_Click(object sender, EventArgs e)
+        {
+            //next(fractal.draw2);
+            next(fractal_fs.draw2);
+        }
+
+        private void buttonNext3_Click(object sender, EventArgs e)
+        {
+            //next(fractal.draw3);
+            next(fractal_fs.draw3);
+        }
+
+        private void buttonNext4_Click(object sender, EventArgs e)
+        {
+            next(fractal.draw4);
+        }
+
+        private void buttonNext5_Click(object sender, EventArgs e)
+        {
+            next(fractal.draw5);
+        }
+
+        private Line convLine(FractalFSharp.Line fsline)
+        {
+            return new Line(new Point(fractal_fs.startX(fsline), fractal_fs.startY(fsline)), new Point(fractal_fs.endX(fsline), fractal_fs.endY(fsline)));
+        }
+
+        private void pictureBoxFractal_Paint(object sender, PaintEventArgs e)
+        {
+            Point center = new Point(pictureBoxFractal.Width / 2, pictureBoxFractal.Height / 2);
+            Point right = new Point(pictureBoxFractal.Width / 4, 0);
+            Line initialLine = new Line(center - right, center + right);
+            //foreach ( Line line in fractal.Lines )
+            foreach ( Line line in fractal_fs.Lines.Select(convLine) )
+            {
+                e.Graphics.DrawLine(new Pen(Color.Black), (initialLine * line).intStart, (initialLine * line).intEnd);
+            }
+        }
+
+        private void buttonText_Click(object sender, EventArgs e)
+        {
+            fractal.drawFromText(textBoxInput.Text);
+            pictureBoxFractal.Invalidate();
+        }
+
+        //private IEnumerator&lt;IEnumerable&lt;Line&gt;&gt; fractalEnumerator;
+
+        private void getEnum(Action&lt;Line&gt; draw)
+        {
+            Line line = new Line(new Point(0, 0), new Point(1, 0));
+            draw(line);
+            pictureBoxFractal.Invalidate();
+        }
+
+        private void getEnum(Action draw)
+        {
+            draw();
+            pictureBoxFractal.Invalidate();
+        }
+
+        private void buttonEnum1_Click(object sender, EventArgs e)
+        {
+            //getEnum(fractal.drawEnum1);
+            getEnum(fractal_fs.drawEnum1);
+        }
+
+        private void buttonEnum2_Click(object sender, EventArgs e)
+        {
+            //getEnum(fractal.drawEnum2);
+            getEnum(fractal_fs.drawEnum2);
+        }
+
+        private void buttonEnum3_Click(object sender, EventArgs e)
+        {
+            //getEnum(fractal.drawEnum3);
+            getEnum(fractal_fs.drawEnum3);
+        }
+
+        private void buttonEnumNext_Click(object sender, EventArgs e)
+        {
+            //fractal.enumNext();
+            fractal_fs.enumNext();
+            pictureBoxFractal.Invalidate();
+        }
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>class Fractal</title>
+                  <text>class Fractal
+    {
+        private Division division = new Division();
+        private IEnumerable&lt;Line&gt; lines = new Lines();
+
+        public void addPoint(Point p)
+        {
+            division.addPoint(p);
+        }
+
+        private void drawLines(Lines lines, Line line, int count)
+        {
+            if ( count &lt;= 0 )
+            {
+                lines.Add(line);
+            }
+            else
+            {
+                foreach ( Line t in division.Lines )
+                {
+                    drawLines(lines, line * t, count - 1);
+                }
+            }
+        }
+
+        public void draw0(Line line, int count)
+        {
+            Lines ls = new Lines();
+            drawLines(ls, line, count);
+            lines = ls;
+        }
+
+        private IEnumerable&lt;Line&gt; drawLines_(Line line, int count)
+        {
+            if ( count &lt;= 0 )
+            {
+                yield return line;
+            }
+            else
+            {
+                foreach ( Line ln in division.Lines.SelectMany&lt;Line, Line&gt;(t =&gt; drawLines_(line * t, count - 1)) )
+                {
+                    yield return ln;
+                }
+            }
+        }
+
+        private IEnumerable&lt;Line&gt; drawLines(Line line, int count)
+        {
+            if ( count &lt;= 0 )
+            {
+                return new Lines(line);
+            }
+            else
+            {
+                return division.Lines.SelectMany&lt;Line, Line&gt;(t =&gt; drawLines(line * t, count - 1));
+            }
+        }
+
+        private IEnumerable&lt;IEnumerable&lt;Line&gt;&gt; drawAllLines_(Line line)
+        {
+            yield return new Lines(line);
+            for ( int index = 0; ; index++ )
+            {
+                yield return division.Lines.SelectMany&lt;Line, Line&gt;(t =&gt; drawAllLines_(line * t).ElementAt(index));
+            }
+        }
+
+        private IEnumerable&lt;IEnumerable&lt;Line&gt;&gt; drawAllLines(Line line)
+        {
+            return new IEnumerable&lt;Line&gt;[] { new Lines(line) }.Concat(iterate(n =&gt; n + 1, 0).Select(index =&gt; division.Lines.SelectMany(t =&gt; drawAllLines(line * t).ElementAt(index))));
+        }
+
+        public void draw1(Line line, int count)
+        {
+            //lines = drawLines(line, count);
+            lines = drawAllLines(line).ElementAt(count);
+        }
+
+        private IEnumerable&lt;Line&gt; nextLines(IEnumerable&lt;Line&gt; lines)
+        {
+            return lines.SelectMany(line =&gt; division.Lines.Select(t =&gt; line * t));
+        }
+
+        public static IEnumerable&lt;T&gt; iterate&lt;T&gt;(Func&lt;T, T&gt; func, T init)
+        {
+            for ( ;;)
+            {
+                yield return init;
+                init = func(init);
+            }
+        }
+
+        private Tree drawTree(Line line)
+        {
+            return new Tree(line, division.Lines.Select&lt;Line, Tree&gt;(t =&gt; drawTree(line * t)));
+        }
+
+        public void draw2(Line line, int level)
+        {
+            //lines = drawTree(line).levelLines(level);
+            lines = drawTree(line).allLines().ElementAt(level);
+        }
+
+        private IEnumerable&lt;IEnumerable&lt;Line&gt;&gt; flatIterate(Line line)
+        {
+            return iterate&lt;IEnumerable&lt;Line&gt;&gt;(nextLines, new Lines(line));
+        }
+
+        public void draw3(Line line, int level)
+        {
+            lines = flatIterate(line).ElementAt(level);
+        }
+
+        private FuncTree drawFuncTree(Line line)
+        {
+            return new FuncTree(line, division.Lines.Select&lt;Line, Func&lt;FuncTree&gt;&gt;(t =&gt; () =&gt; drawFuncTree(line * t)));
+        }
+
+        public void draw4(Line line, int level)
+        {
+            //lines = drawFuncTree(line).levelLines(level);
+            lines = drawFuncTree(line).allLines().ElementAt(level);
+        }
+
+        private LazyTree drawLazyTree(Line line)
+        {
+            return new LazyTree(line, division.Lines.Select&lt;Line, Lazy&lt;LazyTree&gt;&gt;(t =&gt; new Lazy&lt;LazyTree&gt;(() =&gt; drawLazyTree(line * t))));
+        }
+
+        public void draw5(Line line, int level)
+        {
+            //lines = drawLazyTree(line).levelLines(level);
+            lines = drawLazyTree(line).allLines().ElementAt(level);
+        }
+
+        public void drawFromText(string text)
+        {
+            Text inputText = new Text(text);
+            //lines = inputText.Lines.Select(t =&gt; line * t);
+            lines = inputText.Lines;
+        }
+
+        public IEnumerable&lt;Line&gt; Lines
+        {
+            get
+            {
+                return lines;
+            }
+        }
+
+        private IEnumerator&lt;IEnumerable&lt;Line&gt;&gt; enumerator;
+
+        public void drawEnum1(Line line)
+        {
+            enumerator = drawAllLines(line).GetEnumerator();
+            enumerator.MoveNext();
+            lines = enumerator.Current;
+        }
+
+        public void drawEnum2(Line line)
+        {
+            enumerator = drawTree(line).allLines().GetEnumerator();
+            enumerator.MoveNext();
+            lines = enumerator.Current;
+        }
+
+        public void drawEnum3(Line line)
+        {
+            enumerator = flatIterate(line).GetEnumerator();
+            enumerator.MoveNext();
+            lines = enumerator.Current;
+        }
+
+        public void enumNext()
+        {
+            enumerator.MoveNext();
+            lines = enumerator.Current;
+        }
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>class Tree</title>
+                  <text>class Tree
+    {
+        private Line line;
+        private IEnumerable&lt;Tree&gt; children;
+
+        public Tree(Line line, IEnumerable&lt;Tree&gt; children)
+        {
+            this.line = line;
+            this.children = children;
+        }
+
+        public IEnumerable&lt;Line&gt; levelLines(int index)
+        {
+            if ( index &lt;= 0 )
+            {
+                return new Lines(line);
+            }
+            else
+            {
+                return children.SelectMany(tree =&gt; tree.levelLines(index - 1));
+            }
+        }
+
+        public IEnumerable&lt;IEnumerable&lt;Line&gt;&gt; allLines_()
+        {
+            yield return new Lines(line);
+            for ( int index = 0; ; index++ )
+            {
+                yield return children.SelectMany(tree =&gt; tree.allLines_().ElementAt(index));
+            }
+        }
+
+        public static IEnumerable&lt;T&gt; iterate&lt;T&gt;(Func&lt;T, T&gt; func, T init)
+        {
+            for ( ;;)
+            {
+                yield return init;
+                init = func(init);
+            }
+        }
+
+        public IEnumerable&lt;IEnumerable&lt;Line&gt;&gt; allLines()
+        {
+            return new IEnumerable&lt;Line&gt;[] { new Lines(line) }.Concat(iterate(n =&gt; n + 1, 0).Select(index =&gt; children.SelectMany(tree =&gt; tree.allLines().ElementAt(index))));
+        }
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>class Line</title>
+                  <text>class Line
+    {
+        private Point startPoint;
+        private Point endPoint;
+
+        public Line(Point start, Point end)
+        {
+            startPoint = start;
+            endPoint = end;
+        }
+
+        public static Line operator +(Line line, Point p)
+        {
+            return new Line(line.startPoint + p, line.endPoint + p);
+        }
+
+        public static Line operator *(Line line, Line t)
+        {
+            Point d = line.endPoint - line.startPoint;
+            Point s = d * t.startPoint;
+            Point e = d * t.endPoint;
+            return new Line(s, e) + line.startPoint;
+        }
+
+        public System.Drawing.Point intStart
+        {
+            get
+            {
+                return startPoint.toIntPoint();
+            }
+        }
+
+        public System.Drawing.Point intEnd
+        {
+            get
+            {
+                return endPoint.toIntPoint();
+            }
+        }
+    }</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>class Point</title>
+                  <text>class Point
+    {
+        public Point(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public double X
+        {
+            get; set;
+        }
+
+        public double Y
+        {
+            get; set;
+        }
+
+        public static Point operator +(Point p1, Point p2)
+        {
+            return new Point(p1.X + p2.X, p1.Y + p2.Y);
+        }
+
+        public static Point operator -(Point p1, Point p2)
+        {
+            return new Point(p1.X - p2.X, p1.Y - p2.Y);
+        }
+
+        public static Point operator *(Point p, Point t)
+        {
+            return new Point(t.X * p.X - t.Y * p.Y, t.Y * p.X + t.X * p.Y);
+        }
+
+        public System.Drawing.Point toIntPoint()
+        {
+            return new System.Drawing.Point((int)X, (int)Y);
+        }
+    }</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>F#</title>
+              <text>F#</text>
+              <subpages>
+                <page>
+                  <title>type Point = Point of double * double</title>
+                  <text>type Point = Point of double * double
+
+type Line = Line of Point * Point
+
+type Tree = Tree of Line * Tree seq
+
+type Division = Division of Point list
+
+type Fractal() = 
+    let (&lt;+&gt;) (Point (x1, y1)) (Point (x2, y2)) = Point (x1 + x2, y1 + y2)
+    let (&lt;-&gt;) (Point (x1, y1)) (Point (x2, y2)) = Point (x1 - x2, y1 - y2)
+    let (&lt;*&gt;) (Point (px, py)) (Point (tx, ty)) = Point (tx * px - ty * py, ty * px + tx * py)
+
+    let (&lt;++&gt;) (Line (s, e)) (p:Point) = Line (s &lt;+&gt; p, e &lt;+&gt; p)
+    let (&lt;**&gt;) (Line (s, e)) (Line (ts, te)) = let d = e &lt;-&gt; s in Line (s &lt;+&gt; (d &lt;*&gt; ts), s &lt;+&gt; (d &lt;*&gt; te))
+
+    let rec divLines s e = function
+          (Division []) -&gt; [Line (s, e)]
+        | (Division (p::ps)) -&gt; (Line (s, p))::(divLines p e (Division ps))
+
+    let divisionLines (Division ps) = divLines (Point (0.0, 0.0)) (Point (1.0, 0.0)) (Division ps)
+
+    let division = Division [Point (1.0 / 3.0, 0.0); Point (1.0 / 2.0, -System.Math.Sin (System.Math.PI / 3.0) / 3.0); Point (2.0 / 3.0, 0.0)]
+
+    let nat = Seq.initInfinite id
+
+    let line = Line (Point (0.0, 0.0), Point (1.0, 0.0))
+
+    let mutable lines = Seq.empty
+
+    let mutable enumerator = null
+
+    let startPoint = function Line (s, e) -&gt; s
+    let endPoint = function Line (s, e) -&gt; e
+    let xCoord = function Point (x, y) -&gt; x
+    let yCoord = function Point (x, y) -&gt; y</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.startX line = xCoord (startP</title>
+                  <text>member this.startX line = xCoord (startPoint line)
+    member this.startY line = yCoord (startPoint line)
+    member this.endX line = xCoord (endPoint line)
+    member this.endY line = yCoord (endPoint line)
+
+    member this.Lines = lines</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>let rec drawAllLines line =  Seq.append </title>
+                  <text>let rec drawAllLines line =  Seq.append (Seq.singleton (Seq.singleton line)) (Seq.map (fun index -&gt; Seq.collect (fun t -&gt; Seq.item index (drawAllLines (line &lt;**&gt; t))) (divisionLines division)) nat)
+    let draw_1 line level = Seq.item level (drawAllLines line)
+
+    member this.draw1 level = lines &lt;- draw_1 line level</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>let rec drawTree line = Tree (line, (Seq</title>
+                  <text>let rec drawTree line = Tree (line, (Seq.map (fun t -&gt; drawTree (line &lt;**&gt; t)) (divisionLines division)))
+    let rec allLines (Tree (line, children)) = Seq.append (Seq.singleton (Seq.singleton line)) (Seq.map (fun index -&gt; Seq.collect (fun tree -&gt; Seq.item index (allLines tree)) children) nat)
+    let draw_2 line level = Seq.item level (allLines (drawTree line))
+
+    member this.draw2 level = lines &lt;- draw_2 line level</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>let nextLines lines = Seq.collect (fun l</title>
+                  <text>let nextLines lines = Seq.collect (fun line -&gt; Seq.map (fun t -&gt; line &lt;**&gt; t)  (divisionLines division)) lines
+    let iterate next = Seq.unfold (fun cur -&gt; Some (cur, next cur))
+    let flatIterate line = iterate nextLines (Seq.singleton line)
+    let draw_3 line level = Seq.item level (flatIterate line)
+
+    member this.draw3 level = lines &lt;- draw_3 line level</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.drawEnum1() =</title>
+                  <text>member this.drawEnum1() =
+        enumerator &lt;- (drawAllLines line).GetEnumerator()
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current
+
+    member this.enumNext() =
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.drawEnum2() =</title>
+                  <text>member this.drawEnum2() =
+        enumerator &lt;- (allLines (drawTree line)).GetEnumerator();
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current
+
+    member this.enumNext() =
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.drawEnum3() =</title>
+                  <text>member this.drawEnum3() =
+        enumerator &lt;- (flatIterate line).GetEnumerator()
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current
+
+    member this.enumNext() =
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>type Point(x, y) =</title>
+                  <text>type Point(x, y) =
+    member this.x = x
+    member this.y = y
+    static member (+) (p1: Point, p2: Point) = Point (p1.x + p2.x, p1.y + p2.y)
+    static member (-) (p1: Point, p2: Point) = Point (p1.x - p2.x, p1.y - p2.y)
+    static member (*) (p: Point, t: Point) = Point (t.x * p.x - t.y * p.y, t.y * p.x + t.x * p.y)</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>type Line(s, e) =</title>
+                  <text>type Line(s, e) =
+    member this.startPoint = s
+    member this.endPoint = e
+    //static member (&lt;++&gt;) (line: Line, p: Point) = Line (line.startPoint &lt;+&gt; p, line.endPoint &lt;+&gt; p)
+    //static member (&lt;**&gt;) (line: Line, t: Line) = let d = line.endPoint &lt;-&gt; line.startPoint in Line (line.startPoint &lt;+&gt; (d &lt;*&gt; t.startPoint), line.startPoint &lt;+&gt; (d &lt;*&gt; t.endPoint))
+    static member (+) (line: Line, p: Point) = Line (line.startPoint + p, line.endPoint + p)
+    static member (*) (line: Line, t: Line) = let d = line.endPoint - line.startPoint in Line (line.startPoint + (d * t.startPoint), line.startPoint + (d * t.endPoint))</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>type Tree(line, children) =</title>
+                  <text>type Tree(line, children) =
+    member this.line = line
+    member this.children = children</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>type Division(pointList) =</title>
+                  <text>type Division(pointList) =
+    let rec divLines s e = function
+          [] -&gt; [Line (s, e)]
+        | (p::ps) -&gt; (Line (s, p))::(divLines p e ps)
+    member this.pointList = pointList
+    member this.divisionLines = divLines (Point (0.0, 0.0)) (Point (1.0, 0.0)) pointList</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>type Fractal() = </title>
+                  <text>type Fractal() = 
+    let division = Division [Point (1.0 / 3.0, 0.0); Point (1.0 / 2.0, -System.Math.Sin (System.Math.PI / 3.0) / 3.0); Point (2.0 / 3.0, 0.0)]
+
+    let nat = Seq.initInfinite id
+
+    let line = Line (Point (0.0, 0.0), Point (1.0, 0.0))
+
+    let mutable lines = Seq.empty
+
+    let mutable enumerator = null
+
+    member this.startX (line: Line) = line.startPoint.x
+    member this.startY (line: Line) = line.startPoint.y
+    member this.endX (line: Line) = line.endPoint.x
+    member this.endY (line: Line) = line.endPoint.y
+
+    member this.Lines = lines</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>let rec drawAllLines line =  Seq.append </title>
+                  <text>let rec drawAllLines line =  Seq.append (Seq.singleton (Seq.singleton line)) (Seq.map (fun index -&gt; Seq.collect (fun t -&gt; Seq.item index (drawAllLines (line * t))) (division.divisionLines)) nat)
+    let draw_1 line level = Seq.item level (drawAllLines line)
+
+    member this.draw1 level = lines &lt;- draw_1 line level</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>let rec drawTree line = Tree (line, (Seq</title>
+                  <text>let rec drawTree line = Tree (line, (Seq.map (fun t -&gt; drawTree (line * t)) (division.divisionLines)))
+    let rec allLines (tree: Tree) = Seq.append (Seq.singleton (Seq.singleton tree.line)) (Seq.map (fun index -&gt; Seq.collect (fun tree -&gt; Seq.item index (allLines tree)) tree.children) nat)
+    let draw_2 line level = Seq.item level (allLines (drawTree line))
+
+    member this.draw2 level = lines &lt;- draw_2 line level</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>let nextLines lines = Seq.collect (fun l</title>
+                  <text>let nextLines lines = Seq.collect (fun line -&gt; Seq.map (fun t -&gt; line * t) (division.divisionLines)) lines
+    let iterate next = Seq.unfold (fun cur -&gt; Some (cur, next cur))
+    let flatIterate line = iterate nextLines (Seq.singleton line)
+    let draw_3 line level = Seq.item level (flatIterate line)
+
+    member this.draw3 level = lines &lt;- draw_3 line level</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.drawEnum1() =</title>
+                  <text>member this.drawEnum1() =
+        enumerator &lt;- (drawAllLines line).GetEnumerator()
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current
+
+    member this.enumNext() =
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.drawEnum2() =</title>
+                  <text>member this.drawEnum2() =
+        enumerator &lt;- (allLines (drawTree line)).GetEnumerator();
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current
+
+    member this.enumNext() =
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current</text>
+                  <subpages />
+                </page>
+                <page>
+                  <title>member this.drawEnum3() =</title>
+                  <text>member this.drawEnum3() =
+        enumerator &lt;- (flatIterate line).GetEnumerator()
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current
+
+    member this.enumNext() =
+        let r = enumerator.MoveNext()
+        lines &lt;- enumerator.Current</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+          </subpages>
+        </page>
+        <page>
+          <title>例：バイナリーエディター</title>
+          <text>例：バイナリーエディター</text>
+          <subpages>
+            <page>
+              <title>C#</title>
+              <text>C#</text>
+              <subpages>
+                <page>
+                  <title>通常のイベント処理版</title>
+                  <text>通常のイベント処理版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(Form)</title>
+                      <text>コード(Form)
+
+    public partial class FormBinaryEditor : Form
+    {
+        private Contents1 cont;
+
+        public FormBinaryEditor()
+        {
+            InitializeComponent();
+            cont = new Contents1();
+        }
+
+        private IEnumerable&lt;string&gt; contSeq(IEnumerable&lt;string&gt; inputs)
+        {
+            string cur = "";
+            return inputs.Select(s =&gt; cur += s);
+        }
+
+        private void button0_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "0";
+            textBoxEditor.Text = cont.Contents;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "1";
+            textBoxEditor.Text = cont.Contents;
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Contents1</title>
+                      <text>class Contents1
+    {
+        private string contents = "";
+
+        public string Contents
+        {
+            get
+            {
+                return contents;
+            }
+            set
+            {
+                contents += value;
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>入力列挙クラス分解版</title>
+                  <text>入力列挙クラス分解版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(Form)</title>
+                      <text>コード(Form)
+
+    public partial class FormBinaryEditor : Form
+    {
+        private Contents2 cont;
+
+        public FormBinaryEditor()
+        {
+            InitializeComponent();
+            cont = new Contents2(contSeq);
+        }
+
+        private IEnumerable&lt;string&gt; contSeq(IEnumerable&lt;string&gt; inputs)
+        {
+            string cur = "";
+            return inputs.Select(s =&gt; cur += s);
+        }
+
+        private void button0_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "0";
+            textBoxEditor.Text = cont.Contents;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "1";
+            textBoxEditor.Text = cont.Contents;
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Contents2</title>
+                      <text>class Contents2
+    {
+        private Inputs inputs = new Inputs();
+        private IEnumerator&lt;string&gt; contEnumerator;
+
+        public Contents2(Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;string&gt;&gt; contSeq)
+        {
+            contEnumerator = contSeq(inputs).GetEnumerator();
+        }
+
+        public string Contents
+        {
+            get
+            {
+                contEnumerator.MoveNext();
+                return contEnumerator.Current;
+            }
+            set
+            {
+                inputs.Set(value);
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Inputs : IEnumerable&lt;string&gt;</title>
+                      <text>class Inputs : IEnumerable&lt;string&gt;
+    {
+        private Holder holder = new Holder();
+
+        public void Set(string s)
+        {
+            holder.Contents = s;
+        }
+
+        public IEnumerator&lt;string&gt; GetEnumerator()
+        {
+            for ( ;;)
+            {
+                yield return holder.Contents;
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Holder</title>
+                      <text>class Holder
+    {
+        private string contents = "";
+        private string currentContents = "";
+
+        private void waitSet()
+        {
+            for ( ;;)
+            {
+                lock ( contents )
+                {
+                    if ( contents != "" )
+                    {
+                        currentContents = contents;
+                        contents = "";
+                        return;
+                    }
+                }
+            }
+        }
+
+        public string Contents
+        {
+            get
+            {
+                waitSet();
+                return currentContents;
+            }
+            set
+            {
+                lock ( contents )
+                {
+                    contents = value;
+                }
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>別スレッドでの入力列挙版</title>
+                  <text>別スレッドでの入力列挙版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(Form)</title>
+                      <text>コード(Form)
+
+    public partial class FormBinaryEditor : Form
+    {
+        private Contents3 cont;
+
+        public FormBinaryEditor()
+        {
+            InitializeComponent();
+            cont = new Contents3(contSeq);
+        }
+
+        private IEnumerable&lt;string&gt; contSeq(IEnumerable&lt;string&gt; inputs)
+        {
+            string cur = "";
+            return inputs.Select(s =&gt; cur += s);
+        }
+
+        private void button0_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "0";
+            textBoxEditor.Text = cont.Contents;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "1";
+            textBoxEditor.Text = cont.Contents;
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Contents3</title>
+                      <text>class Contents3
+    {
+        private Inputs inputs = new Inputs();
+        private Holder holder = new Holder();
+        private Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;string&gt;&gt; contSeq;
+
+        public Contents3(Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;string&gt;&gt; contSeq)
+        {
+            this.contSeq = contSeq;
+            Task.Run(() =&gt; runIterate());
+        }
+
+        public string Contents
+        {
+            get
+            {
+                return holder.Contents;
+            }
+            set
+            {
+                inputs.Set(value);
+            }
+        }
+
+        private void runIterate()
+        {
+            foreach ( string cont in contSeq(inputs) )
+            {
+                holder.Contents = cont;
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Inputs : IEnumerable&lt;string&gt;</title>
+                      <text>class Inputs : IEnumerable&lt;string&gt;
+    {
+        private Holder holder = new Holder();
+
+        public void Set(string s)
+        {
+            holder.Contents = s;
+        }
+
+        public IEnumerator&lt;string&gt; GetEnumerator()
+        {
+            for ( ;;)
+            {
+                yield return holder.Contents;
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Holder</title>
+                      <text>class Holder
+    {
+        private string contents = "";
+        private string currentContents = "";
+
+        private void waitSet()
+        {
+            for ( ;;)
+            {
+                lock ( contents )
+                {
+                    if ( contents != "" )
+                    {
+                        currentContents = contents;
+                        contents = "";
+                        return;
+                    }
+                }
+            }
+        }
+
+        public string Contents
+        {
+            get
+            {
+                waitSet();
+                return currentContents;
+            }
+            set
+            {
+                lock ( contents )
+                {
+                    contents = value;
+                }
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>F#</title>
+              <text>F#</text>
+              <subpages>
+                <page>
+                  <title>入力列挙クラス分解版</title>
+                  <text>入力列挙クラス分解版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(Form, C#)</title>
+                      <text>コード(Form, C#)
+
+    public partial class FormBinaryEditor : Form
+    {
+        private Contents2 cont;
+
+        public FormBinaryEditor()
+        {
+            InitializeComponent();
+            cont = new Contents2(new BinaryEditorFSharp.BinaryEditorFS().contSeq);
+        }
+
+        private void button0_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "0";
+            textBoxEditor.Text = cont.Contents;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "1";
+            textBoxEditor.Text = cont.Contents;
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+
+type BinaryEditorFS() = 
+    member this.contSeq (input: string seq) = Seq.skip 1 (Seq.scan (fun (cont: string) -&gt; (fun s -&gt; cont + s)) "" input)</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Contents2</title>
+                      <text>class Contents2
+    {
+        private Inputs inputs = new Inputs();
+        private IEnumerator&lt;string&gt; contEnumerator;
+
+        public Contents2(Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;string&gt;&gt; contSeq)
+        {
+            contEnumerator = contSeq(inputs).GetEnumerator();
+        }
+
+        public string Contents
+        {
+            get
+            {
+                contEnumerator.MoveNext();
+                return contEnumerator.Current;
+            }
+            set
+            {
+                inputs.Set(value);
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Inputs : IEnumerable&lt;string&gt;</title>
+                      <text>class Inputs : IEnumerable&lt;string&gt;
+    {
+        private Holder holder = new Holder();
+
+        public void Set(string s)
+        {
+            holder.Contents = s;
+        }
+
+        public IEnumerator&lt;string&gt; GetEnumerator()
+        {
+            for ( ;;)
+            {
+                yield return holder.Contents;
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Holder</title>
+                      <text>class Holder
+    {
+        private string contents = "";
+        private string currentContents = "";
+
+        private void waitSet()
+        {
+            for ( ;;)
+            {
+                lock ( contents )
+                {
+                    if ( contents != "" )
+                    {
+                        currentContents = contents;
+                        contents = "";
+                        return;
+                    }
+                }
+            }
+        }
+
+        public string Contents
+        {
+            get
+            {
+                waitSet();
+                return currentContents;
+            }
+            set
+            {
+                lock ( contents )
+                {
+                    contents = value;
+                }
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+                <page>
+                  <title>別スレッドでの入力列挙版</title>
+                  <text>別スレッドでの入力列挙版</text>
+                  <subpages>
+                    <page>
+                      <title>コード(Form, C#)</title>
+                      <text>コード(Form, C#)
+
+    public partial class FormBinaryEditor : Form
+    {
+        private Contents3 cont;
+
+        public FormBinaryEditor()
+        {
+            InitializeComponent();
+            cont = new Contents3(new BinaryEditorFSharp.BinaryEditorFS().contSeq);
+        }
+
+        private void button0_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "0";
+            textBoxEditor.Text = cont.Contents;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            cont.Contents = "1";
+            textBoxEditor.Text = cont.Contents;
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>コード(F#)</title>
+                      <text>コード(F#)
+
+type BinaryEditorFS() = 
+    member this.contSeq (input: string seq) = Seq.skip 1 (Seq.scan (fun (cont: string) -&gt; (fun s -&gt; cont + s)) "" input)</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Contents3</title>
+                      <text>class Contents3
+    {
+        private Inputs inputs = new Inputs();
+        private Holder holder = new Holder();
+        private Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;string&gt;&gt; contSeq;
+
+        public Contents3(Func&lt;IEnumerable&lt;string&gt;, IEnumerable&lt;string&gt;&gt; contSeq)
+        {
+            this.contSeq = contSeq;
+            Task.Run(() =&gt; runIterate());
+        }
+
+        public string Contents
+        {
+            get
+            {
+                return holder.Contents;
+            }
+            set
+            {
+                inputs.Set(value);
+            }
+        }
+
+        private void runIterate()
+        {
+            foreach ( string cont in contSeq(inputs) )
+            {
+                holder.Contents = cont;
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Inputs : IEnumerable&lt;string&gt;</title>
+                      <text>class Inputs : IEnumerable&lt;string&gt;
+    {
+        private Holder holder = new Holder();
+
+        public void Set(string s)
+        {
+            holder.Contents = s;
+        }
+
+        public IEnumerator&lt;string&gt; GetEnumerator()
+        {
+            for ( ;;)
+            {
+                yield return holder.Contents;
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                    <page>
+                      <title>class Holder</title>
+                      <text>class Holder
+    {
+        private string contents = "";
+        private string currentContents = "";
+
+        private void waitSet()
+        {
+            for ( ;;)
+            {
+                lock ( contents )
+                {
+                    if ( contents != "" )
+                    {
+                        currentContents = contents;
+                        contents = "";
+                        return;
+                    }
+                }
+            }
+        }
+
+        public string Contents
+        {
+            get
+            {
+                waitSet();
+                return currentContents;
+            }
+            set
+            {
+                lock ( contents )
+                {
+                    contents = value;
+                }
+            }
+        }
+    }</text>
+                      <subpages />
+                    </page>
+                  </subpages>
+                </page>
+              </subpages>
+            </page>
+            <page>
+              <title>Haskell</title>
+              <text>Haskell</text>
+              <subpages>
+                <page>
+                  <title>contSeq input = drop 1 (scanl (\cont -&gt; </title>
+                  <text>contSeq input = drop 1 (scanl (\cont -&gt; \s -&gt; cont ++ s) "" input)
+
+main = do
+    print $ contSeq ["0", "1", "0", "1", "0", "1"]
+
+["0","01","010","0101","01010","010101"]</text>
+                  <subpages />
+                </page>
+              </subpages>
+            </page>
+          </subpages>
+        </page>
+      </subpages>
+    </page>
+    <page>
+      <title>クリーネ代数</title>
+      <text>クリーネ代数</text>
+      <subpages>
+        <page>
+          <title>Prologでは実行順序が決まっているのですが実行順序がないものを考えます。</title>
+          <text>Prologでは実行順序が決まっているのですが実行順序がないものを考えます。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>(これを「純Prolog」と呼ぶことにします。)</title>
+          <text>(これを「純Prolog」と呼ぶことにします。)</text>
+          <subpages />
+        </page>
+        <page>
+          <title>「純Prolog」のプログラムはあるブール代数の元を変換するものと考えることがで</title>
+          <text>「純Prolog」のプログラムはあるブール代数の元を変換するものと考えることができます。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>(これを「純Prolog」プログラムの「構文」と呼ぶことにします。)</title>
+          <text>(これを「純Prolog」プログラムの「構文」と呼ぶことにします。)</text>
+          <subpages />
+        </page>
+        <page>
+          <title>「純Prolog」プログラムの「構文」の全体はPrologの節の和集合と変換の合</title>
+          <text>「純Prolog」プログラムの「構文」の全体はPrologの節の和集合と変換の合成を和と積としてべき等半環となります。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>Prologのパターンマッチの機能を使って分岐や構造(直積、直和のようなもの)を</title>
+          <text>Prologのパターンマッチの機能を使って分岐や構造(直積、直和のようなもの)を表すことができます。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>「純Prolog」プログラムの実行結果や中間の状態をプログラムの「効果」と呼ぶこ</title>
+          <text>「純Prolog」プログラムの実行結果や中間の状態をプログラムの「効果」と呼ぶことにします。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>「効果」は「構文」の極限のようなものとなります。</title>
+          <text>「効果」は「構文」の極限のようなものとなります。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>実行したときに結果が得られるのか、などということを考えるために、プログラムを分類</title>
+          <text>実行したときに結果が得られるのか、などということを考えるために、プログラムを分類します。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>このような代数的対象に順序を導入することでプログラムの分類をすることができると考</title>
+          <text>このような代数的対象に順序を導入することでプログラムの分類をすることができると考えています。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>順序は「構文」による変換を何度やったかという順序で、時間の経過を表すとも考えるこ</title>
+          <text>順序は「構文」による変換を何度やったかという順序で、時間の経過を表すとも考えることができます。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>順序を保存するようなプログラムの変換を考えて、その変換によって分類します。</title>
+          <text>順序を保存するようなプログラムの変換を考えて、その変換によって分類します。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>(これを代数的分類と呼ぶことにします。)</title>
+          <text>(これを代数的分類と呼ぶことにします。)</text>
+          <subpages />
+        </page>
+        <page>
+          <title>これについては計算理論的な分類はすでに存在するかもしれませんが、</title>
+          <text>これについては計算理論的な分類はすでに存在するかもしれませんが、</text>
+          <subpages />
+        </page>
+        <page>
+          <title>計算理論的な分類については詳しく知りませんし、</title>
+          <text>計算理論的な分類については詳しく知りませんし、</text>
+          <subpages />
+        </page>
+        <page>
+          <title>ある代数的対象を考えることで他の代数的対象の理論が使えるかもしれません。</title>
+          <text>ある代数的対象を考えることで他の代数的対象の理論が使えるかもしれません。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>このようなものがどのような分野に属するものかよくわかりませんが、ウェブで検索して</title>
+          <text>このようなものがどのような分野に属するものかよくわかりませんが、ウェブで検索して見つかる限りではクリーネ代数やべき等半環が近いようです。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>分類をすることによって純粋関数型言語の動作がわかりやすくなると考えています。</title>
+          <text>分類をすることによって純粋関数型言語の動作がわかりやすくなると考えています。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>純粋関数型言語では実行順序を考えず計算を進めていくことができますが、結果を得るた</title>
+          <text>純粋関数型言語では実行順序を考えず計算を進めていくことができますが、結果を得るためには実行順序を考えなければなりません。実際には実行するには時間もかかるし、実行順序もあるので。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>プログラミング言語F#では関数型言語的な機能とオブジェクト指向的な機能を持ってい</title>
+          <text>プログラミング言語F#では関数型言語的な機能とオブジェクト指向的な機能を持っていますが、実際には両者を相互に連係させて使うことは難しいです。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>F#のイテレーター的な機能は関数からクラスを自動的に作るものと考えることができま</title>
+          <text>F#のイテレーター的な機能は関数からクラスを自動的に作るものと考えることができます。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>F#のイテレーター的な機能を使うと関数とクラスの連係ができるのではないかと考えら</title>
+          <text>F#のイテレーター的な機能を使うと関数とクラスの連係ができるのではないかと考えられます。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>この関数とクラスの連係のために代数的分類が使えると考えています。</title>
+          <text>この関数とクラスの連係のために代数的分類が使えると考えています。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>またブラウザで動作するプログラムとサーバーで動作するプログラムが連係したアプリケ</title>
+          <text>またブラウザで動作するプログラムとサーバーで動作するプログラムが連係したアプリケーションにも代数的分類が使えると考えています。</text>
+          <subpages />
+        </page>
+        <page>
+          <title>直積と直和の部分を疑似クラス</title>
+          <text>直積と直和の部分を疑似クラス</text>
+          <subpages />
+        </page>
+      </subpages>
+    </page>
+    <page>
+      <title>生成元マトリックスによってインデックスがつけられた半環</title>
+      <text>生成元マトリックスによってインデックスがつけられた半環</text>
+      <subpages />
+    </page>
+    <page>
+      <title>フラクタル代数言語</title>
+      <text>フラクタル代数言語
+Fractal/F#
+
+F#やC#のイテレーター的な機能は関数からイテレーターのクラスを作る、またはイテレーターのクラスから関数を作る機能で、これをイテレーター化機能と呼ぶことにします。
+どちらの方向がイテレーター化と呼ぶべきかわかりませんが、両方の方向をまとめてイテレーター化機能と呼ぶことにします。
+
+順序を保存するプログラムの変換を、フラクタル図形の変換に見立てて、フラクタル変換機能と呼ぶことにします。
+
+フラクタル代数言語 Fractal
+Fractal/F# = F# + フラクタル変換機能
+Fractal/TS = TypeScript + イテレーター化機能 + フラクタル変換機能
+Fractal/Perl = Perl + イテレーター化機能 + フラクタル変換機能
+Fractal/C# = C# + フラクタル変換機能
+Fractal/Java = JavaをC#に変換 + フラクタル変換機能
+
+Fractal/H = Haskell + ?
+</text>
+      <subpages />
+    </page>
+  </subpages>
+</page>
